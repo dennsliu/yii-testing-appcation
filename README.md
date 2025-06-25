@@ -68,6 +68,4 @@ rm -rf backend/web/assets/
 gii link:
 http://yiifrontend.lj.local/index.php?r=gii
 
-
-
 php init

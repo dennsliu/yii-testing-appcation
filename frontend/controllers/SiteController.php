@@ -15,6 +15,9 @@ use frontend\models\PasswordResetRequestForm;
 use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
 use frontend\models\ContactForm;
+use Dennsliu\RSMQ\Exceptions;
+use Predis\Client;
+use Dennsliu\RSMQ\RSMQClient;
 
 /**
  * Site controller
@@ -264,5 +267,42 @@ class SiteController extends Controller
     public function actionSayHello($message = "Hello ")
     {
         return $this->render('say-hello', ['message' => $message]);
+    }
+    //http://yiifrontend.lj.local/?r=site/rsqueue
+    public function actionRsqueue($message = "Hello ")
+    {
+
+        $predis = new Client(
+            [
+                'host' => '127.0.0.1',
+                'port' => 6379
+            ]
+        );
+        $rsmq = new RSMQClient($predis);
+        $queues = $rsmq->listQueues();
+        if (!in_array('myqueue', $queues)) {
+            $rsmq->createQueue('myqueue');
+        }
+        $messageData = ["class" => "\app\models\Task", "method" => "run", "params" => ["id" => 1, "date" => date("Y-m-d H:i:s")]];
+        $id = $rsmq->sendMessage('myqueue', json_encode($messageData));
+
+        echo "Message Sent. ID: ", $id;
+        exit('rsqueue=======');
+    }
+    //http://yiifrontend.lj.local/?r=site/get-rsqueue
+    public function actionGetRsqueue($message = "Hello ")
+    {
+
+        $predis = new Client(
+            [
+                'host' => '127.0.0.1',
+                'port' => 6379
+            ]
+        );
+        $rsmq = new RSMQClient($predis);
+        $queues = $rsmq->listQueues();
+        print_r($queues);
+
+        exit('get rsqueue=======');
     }
 }
